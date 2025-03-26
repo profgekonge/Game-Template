@@ -38,25 +38,3 @@ export class Auth {
     }
 }
 
-document.getElementById("loginForm").addEventListener("submit", function (event) {
-    event.preventDefault();
-    const username = document.getElementById("loginUsername").value;
-    const password = document.getElementById("loginPassword").value;
-
-    if (auth.login(username, password)) {
-        alert("Login successful!");
-        updateUI();
-        window.location.href = "game_form.html";
-    } else {
-        alert("Invalid username or password.");
-    }
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("logoutBtn")?.addEventListener("click", function () {
-        auth.logout();
-        updateUI();
-        window.location.href = "game_home.html";
-    });
-});
-

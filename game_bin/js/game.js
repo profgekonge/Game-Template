@@ -29,6 +29,15 @@ class BrazilianCheckers {
 
         // Play bell sound once at the game start
         this.bellSound.play().catch(err => console.log('Sound play failed:', err));
+        
+        // Get the game level from localStorage
+        this.gameLevel = localStorage.getItem('gameLevel') || 'beginner';
+        
+        // Update player name and level
+        const playerName = localStorage.getItem("currentUser") || "Guest";
+        const level = this.gameLevel.charAt(0).toUpperCase() + this.gameLevel.slice(1);
+        document.getElementById("player-name").textContent = playerName;
+        document.getElementById("game-level").textContent = level;
     }
 
     initializeBoard() {
@@ -310,10 +319,18 @@ class BrazilianCheckers {
     makeComputerMove() {
         const mandatoryJumps = MoveHelper.getAllMandatoryJumps(this.board, this.currentPlayer);
 
-        // If there are mandatory jumps, make the best one
+        // Define difficulty levels
+        const difficultyLevels = {
+            beginner: 0.3,    // 30% chance of making the best move
+            intermediate: 0.6, // 60% chance of making the best move
+            advanced: 0.9     // 90% chance of making the best move
+        };
+
+        const makeOptimalMove = Math.random() < difficultyLevels[this.gameLevel];
+
         if (mandatoryJumps.length > 0) {
-            // Find all pieces that can make jumps
             const jumpingPieces = new Set();
+            // Find all pieces that can make jumps
             mandatoryJumps.forEach(jump => {
                 for (let row = 0; row < 8; row++) {
                     for (let col = 0; col < 8; col++) {
@@ -328,13 +345,29 @@ class BrazilianCheckers {
                 }
             });
 
-            // Choose a random piece that can jump
             const jumpingPieceArray = Array.from(jumpingPieces);
-            const chosenPiece = JSON.parse(jumpingPieceArray[Math.floor(Math.random() * jumpingPieceArray.length)]);
+            let chosenPiece;
             
-            // Get the jumps for this piece and choose one
+            if (makeOptimalMove) {
+                // Choose the piece that can capture the most opponent pieces
+                let bestScore = -1;
+                for (const pieceStr of jumpingPieceArray) {
+                    const piece = JSON.parse(pieceStr);
+                    const jumps = MoveHelper.getMandatoryJumps(this.board, piece.row, piece.col);
+                    if (jumps.length > bestScore) {
+                        bestScore = jumps.length;
+                        chosenPiece = piece;
+                    }
+                }
+            } else {
+                // Random piece selection for lower difficulties
+                chosenPiece = JSON.parse(jumpingPieceArray[Math.floor(Math.random() * jumpingPieceArray.length)]);
+            }
+
             const jumps = MoveHelper.getMandatoryJumps(this.board, chosenPiece.row, chosenPiece.col);
-            const jump = jumps[Math.floor(Math.random() * jumps.length)];
+            const jump = makeOptimalMove ? 
+                jumps.reduce((a, b) => this.evaluateMove(b) > this.evaluateMove(a) ? b : a) : 
+                jumps[Math.floor(Math.random() * jumps.length)];
 
             this.selectedPiece = chosenPiece;
             this.validMoves = jumps;
@@ -342,7 +375,7 @@ class BrazilianCheckers {
             return;
         }
 
-        // If no captures available, make a regular move
+        // Regular moves
         const possibleMoves = [];
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
@@ -360,11 +393,38 @@ class BrazilianCheckers {
         }
 
         if (possibleMoves.length > 0) {
-            const move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+            let move;
+            if (makeOptimalMove) {
+                // Choose the move that gets closest to promotion or prevents opponent's promotion
+                move = possibleMoves.reduce((a, b) => this.evaluateMove(b.to) > this.evaluateMove(a.to) ? b : a);
+            } else {
+                move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+            }
+            
             this.selectedPiece = move.from;
             this.validMoves = [move.to];
             this.makeMove(move.to.row, move.to.col);
         }
+    }
+
+    evaluateMove(move) {
+        let score = 0;
+        
+        // Prioritize moves that lead to promotion
+        if (this.currentPlayer === 'blue' && move.row === 7) {
+            score += 5;
+        }
+        
+        // Prioritize center control
+        const centerDistance = Math.abs(3.5 - move.col);
+        score += (4 - centerDistance) / 2;
+        
+        // Avoid edges unless necessary
+        if (move.col === 0 || move.col === 7) {
+            score -= 1;
+        }
+        
+        return score;
     }
 
     highlightPiece(row, col) {
