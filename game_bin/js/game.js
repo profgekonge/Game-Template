@@ -323,7 +323,7 @@ class BrazilianCheckers {
         const difficultyLevels = {
             beginner: 0.3,    // 30% chance of making the best move
             intermediate: 0.6, // 60% chance of making the best move
-            advanced: 0.9     // 90% chance of making the best move
+            advanced: 1     // 90% chance of making the best move
         };
 
         const makeOptimalMove = Math.random() < difficultyLevels[this.gameLevel];

@@ -21,7 +21,10 @@ export class Auth {
 
     register(username, password) {
         if (this.users.has(username)) return false;
-        this.users.set(username, { password: password });
+        this.users.set(username, { 
+            password: password,
+            balance: 0 
+        });
         this.currentUser = username;
         this.saveData();
         return true;
@@ -35,6 +38,21 @@ export class Auth {
     
     getCurrentUser() {
         return this.currentUser;
+    }
+
+    getUserBalance(username) {
+        const user = this.users.get(username);
+        return user ? (user.balance || 0) : 0;
+    }
+
+    addDeposit(username, amount) {
+        const user = this.users.get(username);
+        if (user) {
+            user.balance = (user.balance || 0) + amount;
+            this.saveData();
+            return true;
+        }
+        return false;
     }
 }
 
