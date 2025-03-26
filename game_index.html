@@ -1,0 +1,58 @@
+<html>
+<head>
+    <title>Brazilian Checkers</title>
+    <link rel="stylesheet" href="game_bin/css/styles.css">
+    <link rel="stylesheet" href="game_bin/css/common.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="game-container">
+        <div id="board-wrapper">
+            <div></div>
+            <div class="col-labels top"></div>
+            <div></div>
+            <div class="row-labels left"></div>
+            <div id="board"></div>
+            <div class="row-labels right"></div>
+            <div></div>
+            <div class="col-labels bottom"></div>
+            <div></div>
+        </div>
+        <div class="info-panel">
+            <div class="status">
+                <div id="current-player"></div>
+                <button id="restart">New Game</button>
+            </div>
+            <div class="score-pane">
+                <div class="score-row">
+                    <span>Red Player:</span>
+                    <span class="player-score" id="red-score">0</span>
+                </div>
+                <div class="score-row">
+                    <span>Blue Player:</span>
+                    <span class="player-score" id="blue-score">0</span>
+                </div>
+                <div class="thinking-text">Computer is thinking...</div>
+                <div class="loading-bar">
+                    <div class="loading-progress"></div>
+                </div>
+            </div>
+            <div class="move-history">
+                <h3>Move History</h3>
+                <div class="history-list"></div>
+               
+            </div>
+            <a href="game_home.html" class="my-button">Back to Home</a>
+            
+        </div>
+    </div>
+    <script type="importmap">
+    {
+        "imports": {
+            "./moves.js": "./moves.js"
+        }
+    }
+    </script>
+    <script type="module" src="game_bin/js/game.js"></script>
+</body>
+</html>
