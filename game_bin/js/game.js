@@ -1,4 +1,7 @@
 import { MoveHelper } from './moves.js';
+import { BeginnerAI } from './ai/BeginnerAI.js';
+import { IntermediateAI } from './ai/IntermediateAI.js';
+import { AdvancedAI } from './ai/AdvancedAI.js';
 
 class BrazilianCheckers {
     constructor() {
@@ -41,11 +44,7 @@ class BrazilianCheckers {
     }
 
     initializeBoard() {
-        // Reset move history
-        this.moveHistory = [];
-        this.moveCount = 1;
-        
-        // Create 8x8 board
+        this.board = [];
         for (let row = 0; row < 8; row++) {
             this.board[row] = [];
             for (let col = 0; col < 8; col++) {
@@ -62,6 +61,7 @@ class BrazilianCheckers {
                 }
             }
         }
+        console.log('Board initialized:', this.board);
         this.renderBoard();
         this.scores = { red: 0, blue: 0 };
         this.updateScores();
@@ -72,7 +72,12 @@ class BrazilianCheckers {
 
     renderBoard() {
         const boardElement = document.getElementById('board');
-        boardElement.innerHTML = '';
+        if (!boardElement) {
+            console.error('Board element not found!');
+            return;
+        }
+
+        boardElement.innerHTML = ''; // Clear the board
 
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
@@ -81,22 +86,25 @@ class BrazilianCheckers {
                 cell.dataset.row = row;
                 cell.dataset.col = col;
 
-                if (this.board[row][col]) {
-                    const piece = document.createElement('div');
-                    piece.className = `piece ${this.board[row][col].color}`;
-                    if (this.board[row][col].isKing) {
-                        piece.classList.add('king');
+                const piece = this.board[row][col];
+                if (piece) {
+                    const pieceDiv = document.createElement('div');
+                    pieceDiv.className = `piece ${piece.color}`;
+                    if (piece.isKing) {
+                        const crown = document.createElement('i');
+                        crown.className = 'fas fa-crown';
+                        pieceDiv.appendChild(crown);
+                        pieceDiv.classList.add('king');
                     }
-                    cell.appendChild(piece);
-                }
-
-                if (this.validMoves.some(move => move.row === row && move.col === col)) {
-                    cell.classList.add('highlight');
+                    cell.appendChild(pieceDiv);
                 }
 
                 boardElement.appendChild(cell);
             }
         }
+
+        // Debug log the entire board state
+        console.log('Current board state:', this.board);
     }
 
     setupEventListeners() {
@@ -167,6 +175,22 @@ class BrazilianCheckers {
         }
 
         this.renderBoard();
+    }
+
+    highlightPiece(row, col) {
+        // Highlight the selected piece
+        const pieceElement = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"] .piece`);
+        if (pieceElement) {
+            pieceElement.classList.add('selected');
+        }
+
+        // Highlight valid moves
+        this.validMoves.forEach(move => {
+            const cell = document.querySelector(`.cell[data-row="${move.row}"][data-col="${move.col}"]`);
+            if (cell) {
+                cell.classList.add('highlight');
+            }
+        });
     }
 
     makeMove(toRow, toCol) {
@@ -306,6 +330,7 @@ class BrazilianCheckers {
     }
 
     clearSelection() {
+        // Clear the selected piece
         if (this.selectedPiece) {
             const selected = document.querySelector('.piece.selected');
             if (selected) {
@@ -314,123 +339,27 @@ class BrazilianCheckers {
             this.selectedPiece = null;
             this.validMoves = [];
         }
+
+        // Clear highlighted cells
+        document.querySelectorAll('.cell.highlight').forEach(cell => {
+            cell.classList.remove('highlight');
+        });
     }
 
     makeComputerMove() {
-        const mandatoryJumps = MoveHelper.getAllMandatoryJumps(this.board, this.currentPlayer);
+        const AI = {
+            'beginner': BeginnerAI,
+            'intermediate': IntermediateAI,
+            'advanced': AdvancedAI
+        }[this.gameLevel] || BeginnerAI;
 
-        // Define difficulty levels
-        const difficultyLevels = {
-            beginner: 0.3,    // 30% chance of making the best move
-            intermediate: 0.6, // 60% chance of making the best move
-            advanced: 1     // 90% chance of making the best move
-        };
+        const ai = new AI(this.board);
+        const move = ai.makeMove();
 
-        const makeOptimalMove = Math.random() < difficultyLevels[this.gameLevel];
-
-        if (mandatoryJumps.length > 0) {
-            const jumpingPieces = new Set();
-            // Find all pieces that can make jumps
-            mandatoryJumps.forEach(jump => {
-                for (let row = 0; row < 8; row++) {
-                    for (let col = 0; col < 8; col++) {
-                        const piece = this.board[row][col];
-                        if (piece && piece.color === 'blue') {
-                            const pieceJumps = MoveHelper.getMandatoryJumps(this.board, row, col);
-                            if (pieceJumps.length > 0) {
-                                jumpingPieces.add(JSON.stringify({row, col}));
-                            }
-                        }
-                    }
-                }
-            });
-
-            const jumpingPieceArray = Array.from(jumpingPieces);
-            let chosenPiece;
-            
-            if (makeOptimalMove) {
-                // Choose the piece that can capture the most opponent pieces
-                let bestScore = -1;
-                for (const pieceStr of jumpingPieceArray) {
-                    const piece = JSON.parse(pieceStr);
-                    const jumps = MoveHelper.getMandatoryJumps(this.board, piece.row, piece.col);
-                    if (jumps.length > bestScore) {
-                        bestScore = jumps.length;
-                        chosenPiece = piece;
-                    }
-                }
-            } else {
-                // Random piece selection for lower difficulties
-                chosenPiece = JSON.parse(jumpingPieceArray[Math.floor(Math.random() * jumpingPieceArray.length)]);
-            }
-
-            const jumps = MoveHelper.getMandatoryJumps(this.board, chosenPiece.row, chosenPiece.col);
-            const jump = makeOptimalMove ? 
-                jumps.reduce((a, b) => this.evaluateMove(b) > this.evaluateMove(a) ? b : a) : 
-                jumps[Math.floor(Math.random() * jumps.length)];
-
-            this.selectedPiece = chosenPiece;
-            this.validMoves = jumps;
-            this.makeMove(jump.row, jump.col);
-            return;
-        }
-
-        // Regular moves
-        const possibleMoves = [];
-        for (let row = 0; row < 8; row++) {
-            for (let col = 0; col < 8; col++) {
-                const piece = this.board[row][col];
-                if (piece && piece.color === 'blue') {
-                    const moves = MoveHelper.getValidMoves(this.board, row, col);
-                    moves.forEach(move => {
-                        possibleMoves.push({
-                            from: { row, col },
-                            to: move
-                        });
-                    });
-                }
-            }
-        }
-
-        if (possibleMoves.length > 0) {
-            let move;
-            if (makeOptimalMove) {
-                // Choose the move that gets closest to promotion or prevents opponent's promotion
-                move = possibleMoves.reduce((a, b) => this.evaluateMove(b.to) > this.evaluateMove(a.to) ? b : a);
-            } else {
-                move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-            }
-            
-            this.selectedPiece = move.from;
-            this.validMoves = [move.to];
-            this.makeMove(move.to.row, move.to.col);
-        }
-    }
-
-    evaluateMove(move) {
-        let score = 0;
-        
-        // Prioritize moves that lead to promotion
-        if (this.currentPlayer === 'blue' && move.row === 7) {
-            score += 5;
-        }
-        
-        // Prioritize center control
-        const centerDistance = Math.abs(3.5 - move.col);
-        score += (4 - centerDistance) / 2;
-        
-        // Avoid edges unless necessary
-        if (move.col === 0 || move.col === 7) {
-            score -= 1;
-        }
-        
-        return score;
-    }
-
-    highlightPiece(row, col) {
-        const pieceElement = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"] .piece`);
-        if (pieceElement) {
-            pieceElement.classList.add('selected');
+        if (move) {
+            this.selectedPiece = { row: move.fromRow, col: move.fromCol };
+            this.validMoves = [{ row: move.toRow, col: move.toCol }];
+            this.makeMove(move.toRow, move.toCol);
         }
     }
 
@@ -467,6 +396,8 @@ class BrazilianCheckers {
             <div class="modal-content">
                 <div class="winner-text">Game Over!<br>${winner} Player Wins!</div>
                 <button class="play-again-btn">Play Again</button>
+                <a  href="game_form.html" class="play-again-btn">Change Level</a>
+                <a  href="game_home.html" class="play-again-btn">Quit</a>
             </div>
         `;
 

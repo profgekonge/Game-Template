@@ -4,6 +4,7 @@
     <link rel="stylesheet" href="game_bin/css/styles.css">
     <link rel="stylesheet" href="game_bin/css/common.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="game-container">
@@ -12,7 +13,7 @@
             <div class="col-labels top"></div>
             <div></div>
             <div class="row-labels left"></div>
-            <div id="board"></div>
+            <div id="board"></div> <!-- Ensure this element exists -->
             <div class="row-labels right"></div>
             <div></div>
             <div class="col-labels bottom"></div>
@@ -52,13 +53,10 @@
             
         </div>
     </div>
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <script type="importmap">
-    {
-        "imports": {
-            "./moves.js": "./moves.js"
-        }
-    }
+    <script type="module">
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded, checking board element:', document.getElementById('board'));
+        });
     </script>
     <script type="module" src="game_bin/js/game.js"></script>
 </body>
