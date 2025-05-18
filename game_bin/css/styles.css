@@ -31,8 +31,6 @@
       border: 2px solid #333;
       margin: 0;
       max-width: 100%;
-      background-color: #fff;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
   
   .board-label {
@@ -67,74 +65,46 @@
       width: var(--cell-size);
       height: var(--cell-size);
       display: flex;
-      align-items: center;
       justify-content: center;
-      position: relative;
+      align-items: center;
   }
   
-  .cell.white {
+  .white {
       background-color: #fff;
   }
   
-  .cell.black {
+  .black {
       background-color: #666;
-  }
-  
-  .cell.highlight {
-      background-color: rgba(255, 255, 0, 0.3);
   }
   
   .piece {
       width: var(--piece-size);
       height: var(--piece-size);
       border-radius: 50%;
-      position: relative;
       cursor: pointer;
       transition: transform 0.2s;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      z-index: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
   }
   
   .piece.red {
-      background: radial-gradient(circle at 30% 30%, #ff6b6b, #ff4444);
-      border: 3px solid #cc0000;
+      background-color: #ff4444;
+      border: 2px solid #cc0000;
   }
   
   .piece.blue {
-      background: radial-gradient(circle at 30% 30%, #6b6bff, #4444ff);
-      border: 3px solid #0000cc;
-  }
-  
-  .piece i.fa-crown {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #fff;
-      text-shadow: 1px 1px 1px #000;
-      font-size: calc(var(--piece-size) * 0.5);
+      background-color: #4444ff;
+      border: 2px solid #0000cc;
   }
   
   .piece.king::after {
-      content: '\f521'; /* Font Awesome crown icon */
-      font-family: 'Font Awesome 6 Free';
-      font-weight: 900;
-      font-size: calc(var(--piece-size) * 0.6);
+      content: '♔';
+      font-size: calc(var(--cell-size) * 0.4);
       color: #fff;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      text-shadow: 1px 1px 1px #000;
   }
   
   .piece.selected {
       transform: scale(1.15);
       box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
-      z-index: 1;
   }
   
   .highlight {
